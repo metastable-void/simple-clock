@@ -1,5 +1,5 @@
 <!-- vim: set ts=2 sw=2 et ai :
-    Container Tab Groups
+    Simple Clock A (2021)
     Copyright (C) 2021 真空
 
     This program is free software: you can redistribute it and/or modify
@@ -30,8 +30,9 @@
     <style>
       :root {
         display: flex;
-        min-width: 100%;
-        min-height: 100%;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
       }
 
       body {
@@ -62,6 +63,14 @@
         height: 100%;
         flex-grow: 1;
         flex-shrink: 1;
+      }
+
+      view-clock {
+        display: block;
+        width: 50vmax;
+        height: 50vmax;
+        max-width: 100vmin;
+        max-height: 100vmin;
       }
 
       #digital {
