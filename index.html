@@ -1,0 +1,140 @@
+<!-- vim: set ts=2 sw=2 et ai :
+    Container Tab Groups
+    Copyright (C) 2021 真空
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html xmlns='http://www.w3.org/1999/xhtml' lang='en'>
+  <head>
+    <meta charset='utf-8'/>
+    <title></title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'/>
+    <meta property='og:type' content='article'/>
+    <meta property='og:title' content='Simple Clock'/>
+    <meta property='og:description' content='Simple Clock'/>
+    <meta property='og:image' content='https://xn--w1yo5e.org/masora-icon.png'/>
+    <meta name='twitter:site' content='masora_m'/>
+    <link rel='icon' href='https://xn--w1yo5e.org/masora-icon.png'/>
+    <template id='view-clock'>
+      <svg id='clock-svg' viewBox='0 0 100 100' width='100%'>
+        <circle id='clock-face' cx='50' cy='50' r='50' fill='#fff'/>
+        <g id='rect-set-a'>
+          <rect id='rect-a' x='48.4' y='5' width='3.3' height='11' fill='#000'/>
+          <rect id='rect-b' x='49.3' y='5' width='1.45' height='4' fill='#000'/>
+          <use href='#rect-b' transform='rotate(6, 50, 50)'/>
+          <use href='#rect-b' transform='rotate(12, 50, 50)'/>
+          <use href='#rect-b' transform='rotate(18, 50, 50)'/>
+          <use href='#rect-b' transform='rotate(24, 50, 50)'/>
+        </g>
+        <use href='#rect-set-a' transform='rotate(30, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(60, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(90, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(120, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(150, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(180, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(210, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(240, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(270, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(300, 50, 50)'/>
+        <use href='#rect-set-a' transform='rotate(330, 50, 50)'/>
+        <path id='hour' d='M47.5,20 l-.75,45 h6.5 l-.75,-45 z' fill='#000' filter='drop-shadow(0 0 2 #fff)'/>
+        <path id='minute' d='M48.25,9 l-.75,56 h5 l-.75,-56 z' fill='#000' filter='drop-shadow(0 0 2 #fff)'/>
+        <g id='second' fill='#f00'>
+          <circle cx='50' cy='22' r='5'/>
+          <rect x='49.25' y='22' width='1.5' height='45'/>
+        </g>
+      </svg>
+    </template>
+  </head>
+  <body>
+    <div id='container'></div>
+    <script type='module'>
+      class Clock extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.append(document.querySelector('#view-clock').content.cloneNode(true));
+          const hour = this.shadowRoot.querySelector('#hour');
+          
+        }
+
+        get hourAngle() {
+          const hour = this.shadowRoot.querySelector('#hour');
+          const transform = hour.getAttribute('transform') || '';
+          const matches = transform.match(/rotate\s*\(\s*([0-9.]+)\s*,/);
+          if (!matches) return 0;
+          return +matches[1];
+        }
+
+        set hourAngle(deg) {
+          const hour = this.shadowRoot.querySelector('#hour');
+          hour.setAttribute('transform', `rotate(${+deg}, 50, 50)`);
+        }
+
+        get minuteAngle() {
+          const minute = this.shadowRoot.querySelector('#minute');
+          const transform = minute.getAttribute('transform') || '';
+          const matches = transform.match(/rotate\s*\(\s*([0-9.]+)\s*,/);
+          if (!matches) return 0;
+          return +matches[1];
+        }
+
+        set minuteAngle(deg) {
+          const minute = this.shadowRoot.querySelector('#minute');
+          minute.setAttribute('transform', `rotate(${+deg}, 50, 50)`);
+        }
+
+        get secondAngle() {
+          const second = this.shadowRoot.querySelector('#second');
+          const transform = second.getAttribute('transform') || '';
+          const matches = transform.match(/rotate\s*\(\s*([0-9.]+)\s*,/);
+          if (!matches) return 0;
+          return +matches[1];
+        }
+
+        set secondAngle(deg) {
+          const second = this.shadowRoot.querySelector('#second');
+          second.setAttribute('transform', `rotate(${+deg}, 50, 50)`);
+        }
+      }
+      customElements.define('view-clock', Clock);
+      const clock = new Clock;
+      document.querySelector('#container').append(clock);
+      clock.hourAngle = 360 * Math.random();
+      clock.minuteAngle = 360 * Math.random();
+      clock.secondAngle = 360 * Math.random();
+      
+      let prevUnixTime = Math.trunc((new Date) / 1000) - 1;
+      (async () => {
+        while (true) {
+          const date = new Date;
+          const unixTime = Math.trunc(date / 1000);
+          if (unixTime != prevUnixTime) {
+            prevUnixTime = unixTime;
+            const s = date.getSeconds();
+            const m = date.getMinutes();
+            const h = date.getHours() % 12;
+            clock.secondAngle = 6 * s;
+            clock.minuteAngle = 6 * (m + s / 60);
+            clock.hourAngle = 30 * (h + m / 60 + s / 3600);
+          }
+          await new Promise((resolve, _reject) => {
+            window.requestAnimationFrame(() => void resolve());
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
