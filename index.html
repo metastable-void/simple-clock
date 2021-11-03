@@ -27,6 +27,16 @@
     <meta property='og:image' content='https://xn--w1yo5e.org/masora-icon.png'/>
     <meta name='twitter:site' content='masora_m'/>
     <link rel='icon' href='https://xn--w1yo5e.org/masora-icon.png'/>
+    <style>
+      body {
+        margin: 0;
+      }
+
+      #container {
+        margin: auto;
+        max-width: 100vmin;
+      }
+    </style>
     <template id='view-clock'>
       <svg id='clock-svg' viewBox='0 0 100 100' width='100%'>
         <circle id='clock-face' cx='50' cy='50' r='50' fill='#fff'/>
@@ -49,7 +59,7 @@
         <use href='#rect-set-a' transform='rotate(270, 50, 50)'/>
         <use href='#rect-set-a' transform='rotate(300, 50, 50)'/>
         <use href='#rect-set-a' transform='rotate(330, 50, 50)'/>
-        <path id='hour' d='M47.5,20 l-.75,45 h6.5 l-.75,-45 z' fill='#000' filter='drop-shadow(0 0 2 #fff)'/>
+        <path id='hour' d='M47.75,20 l-.75,45 h6 l-.75,-45 z' fill='#000' filter='drop-shadow(0 0 2 #fff)'/>
         <path id='minute' d='M48.25,9 l-.75,56 h5 l-.75,-56 z' fill='#000' filter='drop-shadow(0 0 2 #fff)'/>
         <g id='second' fill='#f00'>
           <circle cx='50' cy='22' r='5'/>
@@ -61,6 +71,11 @@
   <body>
     <div id='container'></div>
     <script type='module'>
+
+      const waitForAnimationFrame = () => new Promise((resolve, _reject) => {
+        window.requestAnimationFrame(() => void resolve());
+      });
+
       class Clock extends HTMLElement {
         constructor() {
           super();
@@ -130,9 +145,7 @@
             clock.minuteAngle = 6 * (m + s / 60);
             clock.hourAngle = 30 * (h + m / 60 + s / 3600);
           }
-          await new Promise((resolve, _reject) => {
-            window.requestAnimationFrame(() => void resolve());
-          });
+          await waitForAnimationFrame();
         }
       })();
     </script>
