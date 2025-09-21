@@ -42,6 +42,7 @@
         display: flex;
         margin: 0;
         background-color: #aaa;
+        font-family: system-ui, sans-serif;
       }
 
       @media (orientation: landscape) {
@@ -54,6 +55,11 @@
         body {
           flex-direction: column;
         }
+      }
+
+      a {
+        color: inherit;
+        text-decoration: underline;
       }
 
       #container {
@@ -87,12 +93,46 @@
         align-content: center;
       }
 
-      #date, #time, #timezone {
+      #date, #time, #timezone, #footer {
         display: flex;
         padding-inline-start: 10%;
         padding-inline-end: 10%;
         padding-block-start: 2.5%;
         padding-block-end: 2.5%;
+      }
+
+      #footer {
+        font-size: 3vmin;
+        color: #fff;
+        align-content: end;
+        align-items: end;
+        flex-direction: column;
+        row-gap: 1em;
+      }
+
+      #details {
+        text-align: end;
+        color: #888;
+      }
+
+      #credits {
+        min-inline-size: 100%;
+        list-style: none;
+        display: block;
+        white-space: wrap;
+        overflow-wrap: break-word;
+        margin: 0;
+        padding: 0;
+        text-align: start;
+      }
+
+      #credits > li {
+        display: inline;
+        margin-inline-end: .5em;
+      }
+
+      #credits > li::before {
+        content: '\25CF\00A0';
       }
     </style>
     <template id='view-digit'>
@@ -145,6 +185,14 @@
         </g>
       </svg>
     </template>
+    <template id='view-checkbox-item'>
+      <div id='item'>
+        <svg viewBox='0 0 100 100'>
+          <path d='M25,50 l25,25 L75,25' stroke='#fff' fill='none' stroke-width='10' />
+        </svg>
+        <div id='text'></div>
+      </div>
+    </template>
   </head>
   <body>
     <div id='container'></div>
@@ -152,12 +200,126 @@
       <div id='date'></div>
       <div id='time'></div>
       <div id='timezone'></div>
+      <div id='footer'>
+        <div id='controls'></div>
+        <details id='details'>
+          <summary>Details</summary>
+          <ul id='credits'>
+            <li>Inspired by the <a href='https://digital.sbb.ch/en/foundation/brand/watch/'>SBB clock</a>.</li>
+            <li>License: GPL-3.0-or-later. Additional restrictions may apply.</li>
+            <li><a href='https://github.com/metastable-void/simple-clock'>Github</a></li>
+          </ul>
+        </details>
+      </div>
     </div>
     <script type='module'>
 
       const waitForAnimationFrame = () => new Promise((resolve, _reject) => {
         window.requestAnimationFrame(() => void resolve());
       });
+
+      class CheckboxItem extends HTMLElement {
+        #shadowRoot;
+        #checked = false;
+
+        constructor() {
+          super();
+          this.#shadowRoot = this.attachShadow({mode: 'closed'});
+          this.#shadowRoot.append(document.querySelector('#view-checkbox-item').content.cloneNode(true));
+          const style = new CSSStyleSheet;
+          style.replaceSync(`
+            :host {
+              display: block;
+            }
+            
+            #item {
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              block-size: 2rem;
+              inline-size: 100%;
+              -webkit-user-select: none;
+              -moz-user-select: none;
+              user-select: none;
+              cursor: pointer;
+              column-gap: .5em;
+            }
+            
+            svg {
+              block-size: 1em;
+            }
+
+            #item:not(.checked) svg {
+              visibility: hidden;
+            }
+
+            #text {
+              flex: 1;
+              min-inline-size: 0;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            
+            #item:not(.checked) #text {
+              opacity: 0.5;
+            }
+          `);
+          this.#shadowRoot.adoptedStyleSheets = [style];
+          const item = this.#shadowRoot.getElementById('item');
+          item.classList.remove('checked');
+          item.onclick = (ev) => {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            this.checked = !this.checked;
+
+            this.dispatchEvent(new Event('change'));
+          };
+        }
+
+        get text() {
+          return this.#shadowRoot.getElementById('text').textContent ?? '';
+        }
+
+        set text(str) {
+          const el = this.#shadowRoot.getElementById('text');
+          el.textContent = String(str);
+        }
+
+        get checked() {
+          return this.#checked;
+        }
+
+        set checked(v) {
+          const checked = !!v;
+          const changed = checked != this.#checked;
+          if (!changed) return;
+          this.#checked = checked;
+          const item = this.#shadowRoot.getElementById('item');
+          if (this.#checked) {
+            item.classList.add('checked');
+          } else {
+            item.classList.remove('checked');
+          }
+        }
+      }
+
+      customElements.define('view-checkbox-item', CheckboxItem);
+
+      const doSwissWay = new CheckboxItem();
+      const controls = document.querySelector('#controls');
+      controls.append(doSwissWay);
+      doSwissWay.text = 'Do the Swiss way';
+      doSwissWay.addEventListener('change', () => {
+        localStorage.setItem('is-swiss-way', doSwissWay.checked ? '1' : '0');
+      });
+      try {
+        const way = localStorage.getItem('is-swiss-way');
+        if (way == '1') {
+          doSwissWay.checked = true;
+        } else {
+          doSwissWay.checked = false;
+        }
+      } catch (_e) {}
 
       class Clock extends HTMLElement {
         #shadowRoot;
@@ -395,7 +557,7 @@
             const s = date.getSeconds() + (date.getMilliseconds() / 1000);
             const min = date.getMinutes();
             const h = date.getHours() % 12;
-            clock.secondAngle = 6 * s;
+            clock.secondAngle = doSwissWay.checked ? Math.min(360, 6 * s * 1.0256410256410255) : 6 * s;
             clock.minuteAngle = 6 * (min + s / 60);
             clock.hourAngle = 30 * (h + min / 60 + s / 3600);
 
