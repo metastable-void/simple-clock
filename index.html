@@ -94,11 +94,6 @@
         padding-block-start: 2.5%;
         padding-block-end: 2.5%;
       }
-
-      svg|*#hour, svg|*#minute, svg|*#second {
-        -webkit-filter: drop-shadow(0 0 0.5 #aaa);
-        filter: drop-shadow(0 0 0.5 #aaa);
-      }
     </style>
     <template id='view-digit'>
       <svg id='digit-svg' viewBox='0 0 100 200' width='100%'>
@@ -139,9 +134,9 @@
         <use href='#rect-set-a' transform='rotate(270, 50, 50)'/>
         <use href='#rect-set-a' transform='rotate(300, 50, 50)'/>
         <use href='#rect-set-a' transform='rotate(330, 50, 50)'/>
-        <path id='hour' d='M47.75,19 l-.5,40 h6 l-.5,-40 z' fill='#000' filter='drop-shadow(0 0 0.5 #aaa)'/>
-        <path id='minute' d='M48.25,9 l-.75,50 h5 l-.75,-50 z' fill='#000' filter='drop-shadow(0 0 0.5 #aaa)'/>
-        <g id='second' fill='#f00' filter='drop-shadow(0 0 0.5 #aaa)'>
+        <path id='hour' d='M47.75,19 l-.5,40 h6 l-.5,-40 z' fill='#000' filter='url(#shadow)'/>
+        <path id='minute' d='M48.25,9 l-.75,50 h5 l-.75,-50 z' fill='#000' filter='url(#shadow)'/>
+        <g id='second' fill='#f00' filter='url(#shadow)'>
           <circle cx='50' cy='22' r='4.5'/>
           <rect x='49.5' y='22' width='1' height='41'/>
         </g>
@@ -161,14 +156,29 @@
       });
 
       class Clock extends HTMLElement {
+        #shadowRoot;
+
         constructor() {
           super();
-          this.attachShadow({mode: 'open'});
-          this.shadowRoot.append(document.querySelector('#view-clock').content.cloneNode(true));
+          this.#shadowRoot = this.attachShadow({mode: 'closed'});
+          this.#shadowRoot.append(document.querySelector('#view-clock').content.cloneNode(true));
+          const svg = this.#shadowRoot.getElementById('clock-svg');
+          const first = svg.children[0];
+          const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+          const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+          filter.id = 'shadow';
+          const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'feDropShadow');
+          shadow.setAttribute('dx', '0');
+          shadow.setAttribute('dy', '0');
+          shadow.setAttribute('stdDeviation', '0.5');
+          shadow.setAttribute('flood-color', '#aaa');
+          filter.appendChild(shadow);
+          defs.appendChild(filter);
+          svg.insertBefore(defs, first);
         }
 
         get hourAngle() {
-          const hour = this.shadowRoot.querySelector('#hour');
+          const hour = this.#shadowRoot.querySelector('#hour');
           const transform = hour.getAttribute('transform') || '';
           const matches = transform.match(/rotate\s*\(\s*([0-9.]+)\s*,/);
           if (!matches) return 0;
@@ -176,12 +186,12 @@
         }
 
         set hourAngle(deg) {
-          const hour = this.shadowRoot.querySelector('#hour');
+          const hour = this.#shadowRoot.querySelector('#hour');
           hour.setAttribute('transform', `rotate(${+deg}, 50, 50)`);
         }
 
         get minuteAngle() {
-          const minute = this.shadowRoot.querySelector('#minute');
+          const minute = this.#shadowRoot.querySelector('#minute');
           const transform = minute.getAttribute('transform') || '';
           const matches = transform.match(/rotate\s*\(\s*([0-9.]+)\s*,/);
           if (!matches) return 0;
@@ -189,12 +199,12 @@
         }
 
         set minuteAngle(deg) {
-          const minute = this.shadowRoot.querySelector('#minute');
+          const minute = this.#shadowRoot.querySelector('#minute');
           minute.setAttribute('transform', `rotate(${+deg}, 50, 50)`);
         }
 
         get secondAngle() {
-          const second = this.shadowRoot.querySelector('#second');
+          const second = this.#shadowRoot.querySelector('#second');
           const transform = second.getAttribute('transform') || '';
           const matches = transform.match(/rotate\s*\(\s*([0-9.]+)\s*,/);
           if (!matches) return 0;
@@ -202,28 +212,31 @@
         }
 
         set secondAngle(deg) {
-          const second = this.shadowRoot.querySelector('#second');
+          const second = this.#shadowRoot.querySelector('#second');
           second.setAttribute('transform', `rotate(${+deg}, 50, 50)`);
         }
       }
       customElements.define('view-clock', Clock);
 
       class Digit extends HTMLElement {
+        #shadowRoot;
+        #value = '-';
+
         constructor() {
           super();
-          this.attachShadow({mode: 'open'});
-          this.shadowRoot.append(document.querySelector('#view-digit').content.cloneNode(true));
+          this.#shadowRoot = this.attachShadow({mode: 'closed'});
+          this.#shadowRoot.append(document.querySelector('#view-digit').content.cloneNode(true));
           this.value = '-';
         }
 
         get value() {
-          return this.dataset.value || '';
+          return this.#value || '-';
         }
 
         set value(s) {
           const display = (... parts) => {
             for (let i = 0; i < 8; i++) {
-              const element = this.shadowRoot.getElementById(`part${1 + i}`);
+              const element = this.#shadowRoot.getElementById(`part${1 + i}`);
               if (!element) continue;
               element.style.opacity = parts[i] ? '1' : '.125';
             }
@@ -232,62 +245,62 @@
           switch (String(s).trim().slice(0, 1)) {
             case ':': {
               display(0, 0, 0, 0, 0, 0, 0, 1);
-              this.dataset.value = ':';
+              this.#value = ':';
               break;
             }
             case '0': {
               display(1, 0, 1, 1, 1, 1, 1, 0);
-              this.dataset.value = '0';
+              this.#value = '0';
               break;
             }
             case '1': {
               display(0, 0, 0, 0, 1, 0, 1, 0);
-              this.dataset.value = '1';
+              this.#value = '1';
               break;
             }
             case '2': {
               display(1, 1, 1, 0, 1, 1, 0, 0);
-              this.dataset.value = '2';
+              this.#value = '2';
               break;
             }
             case '3': {
               display(1, 1, 1, 0, 1, 0, 1, 0);
-              this.dataset.value = '3';
+              this.#value = '3';
               break;
             }
             case '4': {
               display(0, 1, 0, 1, 1, 0, 1, 0);
-              this.dataset.value = '4';
+              this.#value = '4';
               break;
             }
             case '5': {
               display(1, 1, 1, 1, 0, 0, 1, 0);
-              this.dataset.value = '5';
+              this.#value = '5';
               break;
             }
             case '6': {
               display(1, 1, 1, 1, 0, 1, 1, 0);
-              this.dataset.value = '6';
+              this.#value = '6';
               break;
             }
             case '7': {
               display(1, 0, 0, 1, 1, 0, 1, 0);
-              this.dataset.value = '7';
+              this.#value = '7';
               break;
             }
             case '8': {
               display(1, 1, 1, 1, 1, 1, 1, 0);
-              this.dataset.value = '8';
+              this.#value = '8';
               break;
             }
             case '9': {
               display(1, 1, 1, 1, 1, 0, 1, 0);
-              this.dataset.value = '9';
+              this.#value = '9';
               break;
             }
             default: {
               display(0, 1, 0, 0, 0, 0, 0, 0);
-              this.dataset.value = '-';
+              this.#value = '-';
               break;
             }
           }
