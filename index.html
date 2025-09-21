@@ -41,7 +41,7 @@
         flex-grow: 1;
         display: flex;
         margin: 0;
-        background-color: #777;
+        background-color: #aaa;
       }
 
       @media (orientation: landscape) {
@@ -114,8 +114,9 @@
       </svg>
     </template>
     <template id='view-clock'>
-      <svg id='clock-svg' viewBox='0 0 100 100' width='100%'>
-        <circle id='clock-face' cx='50' cy='50' r='48' fill='#fff'/>
+      <svg id='clock-svg' viewBox='-5 -5 110 110' width='100%'>
+        <circle id='clock-face' cx='50' cy='50' r='50' fill='#fff'/>
+        <circle id='clock-frame' cx='50' cy='50' r='50' fill='none' stroke-width='4' stroke='#ddd' filter='url(#shadow2)'/>
         <g id='rect-set-a'>
           <rect id='rect-a' x='48.4' y='5' width='3.3' height='11' fill='#000'/>
           <rect id='rect-b' x='49.3' y='5' width='1.45' height='4' fill='#000'/>
@@ -177,6 +178,15 @@
           shadow.setAttribute('flood-color', '#aaa');
           filter.appendChild(shadow);
           defs.appendChild(filter);
+          const filter2 = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+          filter2.id = 'shadow2';
+          const shadow2 = document.createElementNS('http://www.w3.org/2000/svg', 'feDropShadow');
+          shadow2.setAttribute('dx', '0');
+          shadow2.setAttribute('dy', '0');
+          shadow2.setAttribute('stdDeviation', '1.5');
+          shadow2.setAttribute('flood-color', '#888');
+          filter2.appendChild(shadow2);
+          defs.appendChild(filter2);
           svg.insertBefore(defs, first);
         }
 
