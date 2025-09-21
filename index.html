@@ -298,9 +298,14 @@
               this.#value = '9';
               break;
             }
-            default: {
+            case '-': {
               display(0, 1, 0, 0, 0, 0, 0, 0);
               this.#value = '-';
+              break;
+            }
+            default: {
+              display(0, 0, 0, 0, 0, 0, 0, 0);
+              this.#value = ' ';
               break;
             }
           }
@@ -369,11 +374,16 @@
             const y2 = date.getFullYear();
             if (y !== y2) {
               y = y2;
-              yearDigits[0].value = Math.trunc(y / 10000) % 10;
-              yearDigits[1].value = Math.trunc(y / 1000) % 10;
-              yearDigits[2].value = Math.trunc(y / 100) % 10;
-              yearDigits[3].value = Math.trunc(y / 10) % 10;
-              yearDigits[4].value = Math.trunc(y) % 10;
+              let prevZero = true;
+              for (let i = 0; i < yearDigits.length; i++) {
+                const value = Math.trunc(y * Math.pow(0.1, yearDigits.length - 1 - i)) % 10;
+                if (value == 0 && prevZero) {
+                  yearDigits[i].value = ' ';
+                } else {
+                  prevZero = false;
+                  yearDigits[i].value = String(value);
+                }
+              }
             }
 
             const m2 = date.getMonth() + 1;
