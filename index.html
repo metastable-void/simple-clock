@@ -28,6 +28,8 @@
     <meta name='twitter:site' content='chaankhoong'/>
     <link rel='icon' href='https://xn--w1yo5e.org/masora-icon.png'/>
     <style>
+      @namespace svg url("http://www.w3.org/2000/svg");
+
       :root {
         display: flex;
         width: 100%;
@@ -92,6 +94,11 @@
         padding-block-start: 2.5%;
         padding-block-end: 2.5%;
       }
+
+      svg|*#hour, svg|*#minute, svg|*#second {
+        -webkit-filter: drop-shadow(0 0 0.5 #aaa);
+        filter: drop-shadow(0 0 0.5 #aaa);
+      }
     </style>
     <template id='view-digit'>
       <svg id='digit-svg' viewBox='0 0 100 200' width='100%'>
@@ -132,9 +139,9 @@
         <use href='#rect-set-a' transform='rotate(270, 50, 50)'/>
         <use href='#rect-set-a' transform='rotate(300, 50, 50)'/>
         <use href='#rect-set-a' transform='rotate(330, 50, 50)'/>
-        <path id='hour' d='M47.75,19 l-.5,40 h6 l-.5,-40 z' fill='#000' filter='drop-shadow(0 0 2 #fff)'/>
-        <path id='minute' d='M48.25,9 l-.75,50 h5 l-.75,-50 z' fill='#000' filter='drop-shadow(0 0 2 #fff)'/>
-        <g id='second' fill='#f00'>
+        <path id='hour' d='M47.75,19 l-.5,40 h6 l-.5,-40 z' fill='#000' filter='drop-shadow(0 0 0.5 #aaa)'/>
+        <path id='minute' d='M48.25,9 l-.75,50 h5 l-.75,-50 z' fill='#000' filter='drop-shadow(0 0 0.5 #aaa)'/>
+        <g id='second' fill='#f00' filter='drop-shadow(0 0 0.5 #aaa)'>
           <circle cx='50' cy='22' r='4.5'/>
           <rect x='49.5' y='22' width='1' height='41'/>
         </g>
@@ -337,9 +344,9 @@
         while (true) {
           const date = new Date;
           const unixTime = Math.trunc(date / 1000);
-          if (unixTime != prevUnixTime) {
+          {
             prevUnixTime = unixTime;
-            const s = date.getSeconds();
+            const s = date.getSeconds() + (date.getMilliseconds() / 1000);
             const min = date.getMinutes();
             const h = date.getHours() % 12;
             clock.secondAngle = 6 * s;
